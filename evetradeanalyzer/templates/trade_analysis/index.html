@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h2 class="text-center mb-4">Choose Your Trade Option:</h2>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'region_analysis' %}" class="btn btn-primary">Region to Region</a>
+                        <a href="{% url 'station_to_station_analysis' %}" class="btn btn-primary">Station to Station</a>
+                        <a href="{% url 'in_station_analysis' %}" class="btn btn-primary">Within Station</a>
+                        <a href="{% url 'inventory_analysis' %}" class="btn btn-primary">Inventory Overview</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

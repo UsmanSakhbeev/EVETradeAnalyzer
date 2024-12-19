@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h2 class="text-center mb-4">Choose Two Stations</h2>
+                <form action="{% url 'station_to_station_analysis' %}" method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="station1" class="form-label">Station 1</label>
+                        <select class="form-select" id="station1" name="station1" required>
+                            <option value="" disabled selected>-- Select Station --</option>
+                            <option value="Station A">Station A</option>
+                            <option value="Station B">Station B</option>
+                            <option value="Station C">Station C</option>
+                            <!-- Add more stations as needed -->
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="station2" class="form-label">Station 2</label>
+                        <select class="form-select" id="station2" name="station2" required>
+                            <option value="" disabled selected>-- Select Station --</option>
+                            <option value="Station A">Station A</option>
+                            <option value="Station B">Station B</option>
+                            <option value="Station C">Station C</option>
+                            <!-- Add more stations as needed -->
+                        </select>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">Search</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
