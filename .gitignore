@@ -3,3 +3,7 @@ __pycache__/
 *.pyo
 .venv/
 venv/
+bin/
+lib64/
+pyvenv.cfg
+evetradeanalyzer/lib64/
