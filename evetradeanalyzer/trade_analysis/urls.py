@@ -11,5 +11,8 @@ urlpatterns = [
         name="station_to_station_analysis",
     ),
     path("in-station-analysis/", views.in_station_analysis, name="in_station_analysis"),
+    path(
+        "in-station-analysis/in_jita/", views.in_jita_analysis, name="in_jita_analysis"
+    ),
     path("inventory-analysis/", views.inventory_analysis, name="inventory_analysis"),
 ]

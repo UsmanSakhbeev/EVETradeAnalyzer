@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% load humanize %}
+<h2 class="text-center">Profitable Items</h2>
+<table class="table table-striped table-dark">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Last Price</th>
+            <th>Previous Price</th>
+            <th>Max Buy Price</th>
+            <th>Difference (ISK)</th>
+            <th>Profit Percentage</th>
+            <th>Remaining Volume</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for deal in page_obj %}
+        <tr>
+            <td>{{ deal.item_name }}</td>
+            <td>{{ deal.last_price|floatformat:2|intcomma }}</td>
+            <td>{{ deal.prev_price|floatformat:2|intcomma }}</td>
+            <td>{{ deal.max_buy_price|floatformat:2|intcomma }}</td>
+            <td>{{ deal.price_difference|floatformat:2|intcomma }}</td>
+            <td>{{ deal.profit_percent|floatformat:2 }}%</td>
+            <td>{{ deal.volume_remain }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="7" class="text-center">No profitable items</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<div class="pagination">
+    <span class="step-links">
+        {% if page_obj.has_previous %}
+            <a href="?page=1">&laquo; first</a>
+            <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+        {% endif %}
+
+        <span class="current">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+        </span>
+
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}">next</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+        {% endif %}
+    </span>
+</div>
+{% endblock %}
