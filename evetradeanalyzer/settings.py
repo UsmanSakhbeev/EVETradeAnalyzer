@@ -15,6 +15,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
+load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -23,12 +24,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-uic^&ouzmq8_^56rs$hkgs%$(0-2wh0m#%6n!8%9bgub1*-me*"
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = []
+SECRET_KEY = os.getenv("SECRET_KEY", "default-secret-key-for-dev")
+DEBUG = os.getenv("DEBUG", "True").lower() in ("true", "1")
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost").split(",")
 
 
 # Application definition
@@ -41,6 +39,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "evetradeanalyzer.trade_analysis",
+    "django.contrib.humanize",
 ]
 
 MIDDLEWARE = [
@@ -80,11 +79,11 @@ WSGI_APPLICATION = "evetradeanalyzer.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "evetradeanalyzer",
-        "USER": "evetradeuser",
-        "PASSWORD": "123321",
-        "HOST": "localhost",
-        "PORT": "5432",
+        "NAME": os.getenv("DB_NAME", "evetradeanalyzer"),
+        "USER": os.getenv("DB_USER", "evetradeuser"),
+        "PASSWORD": os.getenv("DB_PASSWORD", "123321"),
+        "HOST": os.getenv("DB_HOST", "localhost"),
+        "PORT": os.getenv("DB_PORT", "5432"),
     }
 }
 
@@ -113,7 +112,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = "UTC"
+TIME_ZONE = "Europe/Moscow"
 
 USE_I18N = True
 

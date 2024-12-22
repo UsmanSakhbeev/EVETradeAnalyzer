@@ -1,7 +1,8 @@
-import pandas as pd
-import requests
+from django.core.paginator import Paginator
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
+
+from evetradeanalyzer.trade_analysis.models import ProfitableDeal
 
 
 @csrf_exempt  # Декоратор для работы с POST-запросами
@@ -18,7 +19,13 @@ def region_analysis(request):
 
 
 def in_station_analysis(request):
-    return render(request, "trade_analysis/in_station.html")
+    deals_query = ProfitableDeal.objects.all().order_by("-profit_percent")
+    paginator = Paginator(deals_query, 50)  # Показываем 50 записей на странице
+
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, "trade_analysis/in_station.html", {"page_obj": page_obj})
 
 
 def inventory_analysis(request):
