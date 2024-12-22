@@ -7,3 +7,10 @@ bin/
 lib64/
 pyvenv.cfg
 evetradeanalyzer/lib64/
+
+.env
+market_data.json
+temp_market_data/
+evetradeanalyzer/lib64
+*.lock
+
