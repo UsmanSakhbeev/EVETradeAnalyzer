@@ -9,10 +9,7 @@ from evetradeanalyzer.trade_analysis.utils import (
 
 
 def save_profitable_deals_to_db(deals):
-    """
-    Сохраняет список выгодных сделок в базу данных.
-    """
-    ProfitableDeal.objects.all().delete()  # Очищаем старые данные
+    ProfitableDeal.objects.all().delete() 
     for deal in deals:
         ProfitableDeal.objects.create(
             item_name=deal["item_name"],
@@ -30,7 +27,6 @@ class Command(BaseCommand):
     help = "Fetch market data from EVE Online API and process profitable deals."
 
     def handle(self, *args, **kwargs):
-        # Сбор данных с API или из локального кеша
         self.stdout.write("Fetching or loading market data...")
         all_orders = fetch_and_save_market_data()
 
@@ -38,11 +34,9 @@ class Command(BaseCommand):
             self.stdout.write("Не удалось загрузить данные.")
             return
 
-        # Добавляем ордера в базу данных
         self.stdout.write("Saving orders to database...")
         save_orders_to_db(all_orders)
 
-        # Анализируем и сохраняем выгодные сделки
         self.stdout.write("Processing profitable deals...")
         profitable_deals = find_profitable_deals(threshold=0.35)
 
