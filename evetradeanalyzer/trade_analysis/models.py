@@ -41,6 +41,7 @@ class ProfitableDeal(models.Model):
         max_digits=20, decimal_places=2, null=True, blank=True
     )
     volume_remain = models.IntegerField()
+    updated_at = models.DateTimeField(default=now)
 
     def __str__(self):
         return f"{self.item_name} - {self.profit_percent}%"

@@ -44,7 +44,7 @@ class Command(BaseCommand):
 
         # Анализируем и сохраняем выгодные сделки
         self.stdout.write("Processing profitable deals...")
-        profitable_deals = find_profitable_deals(threshold=0.2)
+        profitable_deals = find_profitable_deals(threshold=0.35)
 
         if profitable_deals:
             self.stdout.write(f"Found {len(profitable_deals)} profitable deals.")

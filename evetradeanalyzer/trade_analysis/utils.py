@@ -132,7 +132,7 @@ def update_item_names():
             print(f"Ошибка при обновлении названия для {item.id}: {e}")
 
 
-def find_profitable_deals(threshold=0.1, days=3):
+def find_profitable_deals(threshold=0.35, days=3):
     """
     Ищет выгодные сделки, сравнивая минимальную цену продажи с предыдущей минимальной ценой,
     а также фильтрует результаты по времени (последние `days` дней) по полю last_price.
@@ -184,6 +184,7 @@ def find_profitable_deals(threshold=0.1, days=3):
                 and profit_percent <= 10000
                 and prev_price - last_price > 1000000
                 and (last_price / max_buy_price - 1) <= 0.5
+                and (prev_price - last_price) * last_order.volume_remain > 1000000
             ):
                 profitable_deals.append(
                     {
