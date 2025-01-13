@@ -228,12 +228,26 @@ wheels = [
 ]
 
 [[package]]
+name = "django-background-tasks"
+version = "1.2.8"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "django" },
+    { name = "six" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/dd/e3/d2c442305e922912f68fa157f92bec6661c150110bdce62c3bac58c62931/django_background_tasks-1.2.8.tar.gz", hash = "sha256:1ed5816f8d60f0ed436cd0435405e55e7b91e825fd69bcdada2d605ee1a97056", size = 21287 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/61/ba/e8d45c180bbc2eb98d461db1931d53ed6786a294f0cc3847b22b6de22ff5/django_background_tasks-1.2.8-py3-none-any.whl", hash = "sha256:266b64316e364771afc3af73ae4c3e75f16782aa69e36c9e71d289cfd241347f", size = 25154 },
+]
+
+[[package]]
 name = "evetradeanalyzer"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "aiohttp" },
     { name = "django" },
+    { name = "django-background-tasks" },
     { name = "pandas" },
     { name = "psycopg2" },
     { name = "python-dotenv" },
@@ -244,6 +258,7 @@ dependencies = [
 requires-dist = [
     { name = "aiohttp", specifier = ">=3.11.11" },
     { name = "django", specifier = ">=5.1.4" },
+    { name = "django-background-tasks", specifier = ">=1.2.8" },
     { name = "pandas", specifier = ">=2.2.3" },
     { name = "psycopg2", specifier = ">=2.9.10" },
     { name = "python-dotenv", specifier = ">=1.0.1" },
@@ -595,6 +610,7 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/33/39/5a9a229bb5414abeb86e33b8fc8143ab0aecce5a7f698a53e31367d30caa/psycopg2-2.9.10-cp311-cp311-win_amd64.whl", hash = "sha256:0435034157049f6846e95103bd8f5a668788dd913a7c30162ca9503fdf542cb4", size = 1163736 },
     { url = "https://files.pythonhosted.org/packages/3d/16/4623fad6076448df21c1a870c93a9774ad8a7b4dd1660223b59082dd8fec/psycopg2-2.9.10-cp312-cp312-win32.whl", hash = "sha256:65a63d7ab0e067e2cdb3cf266de39663203d38d6a8ed97f5ca0cb315c73fe067", size = 1025113 },
     { url = "https://files.pythonhosted.org/packages/66/de/baed128ae0fc07460d9399d82e631ea31a1f171c0c4ae18f9808ac6759e3/psycopg2-2.9.10-cp312-cp312-win_amd64.whl", hash = "sha256:4a579d6243da40a7b3182e0430493dbd55950c493d8c68f4eec0b302f6bbf20e", size = 1163951 },
+    { url = "https://files.pythonhosted.org/packages/ae/49/a6cfc94a9c483b1fa401fbcb23aca7892f60c7269c5ffa2ac408364f80dc/psycopg2-2.9.10-cp313-cp313-win_amd64.whl", hash = "sha256:91fd603a2155da8d0cfcdbf8ab24a2d54bca72795b90d2a3ed2b6da8d979dee2", size = 2569060 },
 ]
 
 [[package]]

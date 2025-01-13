@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "evetradeanalyzer.trade_analysis",
     "django.contrib.humanize",
+    "background_task",
 ]
 
 MIDDLEWARE = [
