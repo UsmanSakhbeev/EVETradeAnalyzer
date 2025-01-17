@@ -1,12 +1,12 @@
 [project]
-name = "evetradeanalyzer"
+name = "evetradeanalyzerlegacy"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.10,<4.0"
+requires-python = ">=3.12"
 dependencies = [
     "aiohttp>=3.11.11",
-    "django>=5.1.4",
+    "django>=5.1.5",
     "django-background-tasks>=1.2.8",
     "pandas>=2.2.3",
     "psycopg2>=2.9.10",
@@ -14,3 +14,7 @@ dependencies = [
     "requests>=2.32.3",
 ]
 
+[dependency-groups]
+dev = [
+    "docker>=7.1.0",
+]
