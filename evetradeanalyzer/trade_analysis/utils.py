@@ -13,29 +13,30 @@ from django.utils.timezone import now
 from evetradeanalyzer.trade_analysis.models import Item, MarketOrder, ProfitableDeal
 
 
-@background(schedule=600)
 def fetch_and_process_data_task():
-    all_orders = fetch_and_save_market_data()
-    if not all_orders:
-        print("Не удалось загрузить данные.")
-        return
+    while True:
+        all_orders = fetch_and_save_market_data()
+        if not all_orders:
+            print("Не удалось загрузить данные.")
+            return
 
-    save_orders_to_db(all_orders)
+        save_orders_to_db(all_orders)
 
-    profitable_deals = find_profitable_deals(threshold=0.35)
-    ProfitableDeal.objects.all().delete()
+        profitable_deals = find_profitable_deals(threshold=0.35)
+        ProfitableDeal.objects.all().delete()
 
-    for deal in profitable_deals:
-        ProfitableDeal.objects.create(
-            item_name=deal["item_name"],
-            last_price=deal["last_price"],
-            prev_price=deal["prev_price"],
-            price_difference=deal["price_difference"],
-            profit_percent=deal["profit_percent"],
-            max_buy_price=deal["max_buy_price"],
-            volume_remain=deal["volume_remain"],
-        )
-    print(f"Сохранено {len(profitable_deals)} выгодных сделок в базу данных.")
+        for deal in profitable_deals:
+            ProfitableDeal.objects.create(
+                item_name=deal["item_name"],
+                last_price=deal["last_price"],
+                prev_price=deal["prev_price"],
+                price_difference=deal["price_difference"],
+                profit_percent=deal["profit_percent"],
+                max_buy_price=deal["max_buy_price"],
+                volume_remain=deal["volume_remain"],
+            )
+        print(f"Сохранено {len(profitable_deals)} выгодных сделок в базу данных.")
+        time.sleep(720)
 
 
 def fetch_market_data():
