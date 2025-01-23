@@ -5,7 +5,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: gunicorn evetradeanalyzer.wsgi:application --bind 0.0.0.0:8000
+    command: "sh ./entrypoint.sh"
     volumes:
       - .:/app
     ports:
