@@ -18,7 +18,8 @@ def fetch_and_process_data_task():
         all_orders = fetch_and_save_market_data()
         if not all_orders:
             print("Не удалось загрузить данные.")
-            return
+            time.sleep(30)
+            continue
 
         save_orders_to_db(all_orders)
 
