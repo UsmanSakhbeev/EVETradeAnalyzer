@@ -6,7 +6,7 @@ from datetime import timedelta
 from decimal import Decimal
 
 import requests
-from background_task import background
+from django.db import transaction
 from django.db.models import Max
 from django.utils.timezone import now
 
@@ -240,9 +240,15 @@ def save_orders_to_db(all_orders):
             )
         )
 
+    print(f"Количество записей для вставки: {len(market_orders)}")
     print("saving market_orders to db started")
 
-    MarketOrder.objects.bulk_create(market_orders)
+    BATCH_SIZE = 5000  # Размер батча
+    for i in range(0, len(market_orders), BATCH_SIZE):
+        with transaction.atomic():
+            MarketOrder.objects.bulk_create(market_orders[i : i + BATCH_SIZE])
+        print(f"Сохранено {i + BATCH_SIZE} записей из {len(market_orders)}")
+
     print(f"Сохранено {len(all_orders)} ордеров в базу данных.")
     # Удаление временных данных
     temp_dir = "temp_market_data"
