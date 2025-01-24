@@ -240,6 +240,8 @@ def save_orders_to_db(all_orders):
             )
         )
 
+    print("saving market_orders to db started")
+
     MarketOrder.objects.bulk_create(market_orders)
     print(f"Сохранено {len(all_orders)} ордеров в базу данных.")
     # Удаление временных данных
