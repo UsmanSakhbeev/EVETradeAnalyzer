@@ -243,7 +243,7 @@ def save_orders_to_db(all_orders):
     print(f"Количество записей для вставки: {len(market_orders)}")
     print("saving market_orders to db started")
 
-    BATCH_SIZE = 5000  # Размер батча
+    BATCH_SIZE = 1000  # Размер батча
     for i in range(0, len(market_orders), BATCH_SIZE):
         with transaction.atomic():
             MarketOrder.objects.bulk_create(market_orders[i : i + BATCH_SIZE])
