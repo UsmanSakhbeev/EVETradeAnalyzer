@@ -38,7 +38,7 @@ def fetch_and_process_data_task():
 
         print(f"Сохранено {len(profitable_deals)} выгодных сделок в базу данных.")
         print(f"Последнее обновление базы данных: {time.strftime('%Y-%m-%d %H:%M:%S')}")
-        time.sleep(480)
+        time.sleep(120)
 
 
 def fetch_and_save_orders_to_db(batch_size=10000):
