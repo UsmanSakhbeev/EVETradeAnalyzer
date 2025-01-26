@@ -2,6 +2,7 @@ import json
 import os
 import shutil
 import time
+import traceback
 from datetime import timedelta
 from decimal import Decimal
 
@@ -15,144 +16,110 @@ from evetradeanalyzer.trade_analysis.models import Item, MarketOrder, Profitable
 
 def fetch_and_process_data_task():
     while True:
-        all_orders = fetch_and_save_market_data()
-        if not all_orders:
-            print("Не удалось загрузить данные.")
+        success = fetch_and_save_orders_to_db()
+        if not success:
+            print("Не удалось загрузить данные. Повтор через 30 секунд.")
             time.sleep(30)
             continue
-
-        save_orders_to_db(all_orders)
 
         profitable_deals = find_profitable_deals(threshold=0.35)
         ProfitableDeal.objects.all().delete()
 
-        for deal in profitable_deals:
-            ProfitableDeal.objects.create(
-                item_name=deal["item_name"],
-                last_price=deal["last_price"],
-                prev_price=deal["prev_price"],
-                price_difference=deal["price_difference"],
-                profit_percent=deal["profit_percent"],
-                max_buy_price=deal["max_buy_price"],
-                volume_remain=deal["volume_remain"],
-            )
+        ProfitableDeal.objects.bulk_create(
+            [
+                ProfitableDeal(
+                    item_name=deal["item_name"],
+                    last_price=deal["last_price"],
+                    prev_price=deal["prev_price"],
+                    price_difference=deal["price_difference"],
+                    profit_percent=deal["profit_percent"],
+                    max_buy_price=deal["max_buy_price"],
+                    volume_remain=deal["volume_remain"],
+                )
+                for deal in profitable_deals
+            ]
+        )
+
         print(f"Сохранено {len(profitable_deals)} выгодных сделок в базу данных.")
-        time.sleep(720)
+        time.sleep(720)  # Ожидание перед повторным запуском
 
 
-def fetch_market_data():
+def fetch_and_save_orders_to_db(batch_size=10000):
     base_url = "https://esi.evetech.net/latest/markets/10000002/orders/"
-    station_id = 60003760  # ID Jita IV - Moon 4 - Caldari Navy Assembly Plant
-    all_orders = []
-
-    response = requests.get(base_url)
-    response.raise_for_status()
-    total_pages = int(response.headers.get("X-Pages", 1))
-
-    for page in range(1, total_pages + 1):
-        params = {"page": page}
-        response = requests.get(base_url, params=params)
-        response.raise_for_status()
-        page_orders = response.json()
-
-        station_orders = [
-            order for order in page_orders if order["location_id"] == station_id
-        ]
-        all_orders.extend(station_orders)
-
-    return all_orders
-
-
-def fetch_and_save_market_data():
-    base_url = "https://esi.evetech.net/latest/markets/10000002/orders/"
-    all_orders = []
-
-    temp_dir = "temp_market_data"
-    os.makedirs(temp_dir, exist_ok=True)
-
-    processed_pages = 0
-    if os.path.exists("market_data.json"):
-        with open("market_data.json", "r") as f:
-            all_orders = json.load(f)
-        processed_pages = len(all_orders) // 1000
-        print(f"Loaded {len(all_orders)} orders from local cache.")
-
-    print(f"Starting from page {processed_pages + 1}...")
+    print("Начало загрузки и сохранения ордеров в базу данных...")
 
     try:
         response = requests.get(base_url)
         response.raise_for_status()
         total_pages = int(response.headers.get("X-Pages", 1))
 
-        for page in range(processed_pages + 1, total_pages + 1):
-            print(f"Fetching page {page}/{total_pages}...")
-            params = {"page": page}
+        MarketOrder.objects.all().delete()
+        print("Существующие данные MarketOrder удалены.")
+
+        items_cache = {}
+        market_orders = []  # Для накопления данных из нескольких страниц
+
+        for page in range(1, total_pages + 1):
+            print(f"Загрузка страницы {page}/{total_pages}...")
             retries = 3
 
             while retries > 0:
                 try:
-                    response = requests.get(base_url, params=params)
+                    response = requests.get(base_url, params={"page": page})
                     response.raise_for_status()
                     page_orders = response.json()
 
                     for order in page_orders:
-                        order["issued"] = order.get("issued", None)
+                        item_id = order["type_id"]
+                        if item_id not in items_cache:
+                            item, _ = Item.objects.get_or_create(
+                                id=item_id, defaults={"name": f"Item {item_id}"}
+                            )
+                            items_cache[item_id] = item
+                        else:
+                            item = items_cache[item_id]
 
-                    with open(f"{temp_dir}/page_{page}.json", "w") as temp_file:
-                        json.dump(page_orders, temp_file)
+                        market_orders.append(
+                            MarketOrder(
+                                item=item,
+                                price=order["price"],
+                                volume_remain=order["volume_remain"],
+                                is_buy_order=order["is_buy_order"],
+                                issued=order.get("issued", None),
+                            )
+                        )
 
-                    all_orders.extend(page_orders)
+                    # Сохранение данных, если накопился батч
+                    if len(market_orders) >= batch_size:
+                        with transaction.atomic():
+                            MarketOrder.objects.bulk_create(market_orders)
+                        print(f"Сохранено {len(market_orders)} записей.")
+                        market_orders = []  # Очистка для нового батча
+
                     break
+
                 except requests.exceptions.RequestException as e:
                     retries -= 1
                     print(
-                        f"Ошибка при запросе страницы {page}: {e}. Повтор через 5 секунд..."
+                        f"Ошибка при загрузке страницы {page}: {e}. Повтор через 5 секунд..."
                     )
                     time.sleep(5)
 
             if retries == 0:
                 print(f"Не удалось загрузить страницу {page}. Пропускаем...")
 
-        print("Combining and saving all fetched data...")
-        with open("market_data.json", "w") as f:
-            json.dump(all_orders, f)
+        # Сохранение оставшихся данных
+        if market_orders:
+            with transaction.atomic():
+                MarketOrder.objects.bulk_create(market_orders)
+            print(f"Сохранено {len(market_orders)} записей (остаток).")
 
-        print(f"Successfully fetched and saved {len(all_orders)} orders!")
+        print("Загрузка и сохранение ордеров завершены.")
+        return True
+
     except requests.exceptions.RequestException as e:
-        print(f"Ошибка при запросе данных: {e}")
-        return None
-
-    return all_orders
-
-
-def load_market_data():
-    try:
-        with open("market_data.json", "r") as f:
-            all_orders = json.load(f)
-        print(f"Loaded {len(all_orders)} orders from local cache.")
-        return all_orders
-    except FileNotFoundError:
-        print(
-            "Файл market_data.json не найден. Сначала выполните fetch_and_save_market_data."
-        )
-        return None
-
-
-def update_item_names():
-    base_url = "https://esi.evetech.net/latest/universe/types/"
-    items = Item.objects.filter(name__startswith="Item")
-
-    for item in items:
-        try:
-            response = requests.get(f"{base_url}{item.id}/")
-            response.raise_for_status()
-            data = response.json()
-            name = data.get("name", f"Item {item.id}")
-            item.name = name
-            item.save()
-            print(f"Название обновлено: {item.id} -> {item.name}")
-        except requests.exceptions.RequestException as e:
-            print(f"Ошибка при обновлении названия для {item.id}: {e}")
+        print(f"Ошибка при загрузке данных: {e}")
+        return False
 
 
 def find_profitable_deals(threshold=0.35, days=3):
@@ -213,53 +180,18 @@ def find_profitable_deals(threshold=0.35, days=3):
     return profitable_deals
 
 
-def save_orders_to_db(all_orders):
-    MarketOrder.objects.all().delete()
-    print("SCP [ДАННЫЕ УДАЛЕНЫ]")
+def update_item_names():
+    base_url = "https://esi.evetech.net/latest/universe/types/"
+    items = Item.objects.filter(name__startswith="Item")
 
-    items_cache = {}
-    market_orders = []
-
-    for order in all_orders:
-        item_id = order["type_id"]
-        if item_id not in items_cache:
-            item, _ = Item.objects.get_or_create(
-                id=item_id, defaults={"name": f"Item {item_id}"}
-            )
-            items_cache[item_id] = item
-        else:
-            item = items_cache[item_id]
-
-        market_orders.append(
-            MarketOrder(
-                item=item,
-                price=order["price"],
-                volume_remain=order["volume_remain"],
-                is_buy_order=order["is_buy_order"],
-                issued=order["issued"],
-            )
-        )
-
-    print(f"Количество записей для вставки: {len(market_orders)}")
-    print("saving market_orders to db started")
-
-    BATCH_SIZE = 500  # Размер батча
-    for i in range(0, len(market_orders), BATCH_SIZE):
-        with transaction.atomic():
-            MarketOrder.objects.bulk_create(market_orders[i : i + BATCH_SIZE])
-        print(f"Сохранено {i + BATCH_SIZE} записей из {len(market_orders)}")
-
-    print(f"Сохранено {len(all_orders)} ордеров в базу данных.")
-    # Удаление временных данных
-    temp_dir = "temp_market_data"
-    temp_file = "market_data.json"
-
-    # Удаляем временную папку
-    if os.path.exists(temp_dir):
-        shutil.rmtree(temp_dir)
-        print(f"Папка {temp_dir} успешно удалена.")
-
-    # Удаляем временный файл
-    if os.path.exists(temp_file):
-        os.remove(temp_file)
-        print(f"Файл {temp_file} успешно удалён.")
+    for item in items:
+        try:
+            response = requests.get(f"{base_url}{item.id}/")
+            response.raise_for_status()
+            data = response.json()
+            name = data.get("name", f"Item {item.id}")
+            item.name = name
+            item.save()
+            print(f"Название обновлено: {item.id} -> {item.name}")
+        except requests.exceptions.RequestException as e:
+            print(f"Ошибка при обновлении названия для {item.id}: {e}")
