@@ -1,8 +1,4 @@
-import json
-import os
-import shutil
 import time
-import traceback
 from datetime import timedelta
 from decimal import Decimal
 
@@ -41,7 +37,8 @@ def fetch_and_process_data_task():
         )
 
         print(f"Сохранено {len(profitable_deals)} выгодных сделок в базу данных.")
-        time.sleep(720)  # Ожидание перед повторным запуском
+        print(f"Последнее обновление базы данных: {time.strftime('%Y-%m-%d %H:%M:%S')}")
+        time.sleep(480)
 
 
 def fetch_and_save_orders_to_db(batch_size=10000):
@@ -57,7 +54,7 @@ def fetch_and_save_orders_to_db(batch_size=10000):
         print("Существующие данные MarketOrder удалены.")
 
         items_cache = {}
-        market_orders = []  # Для накопления данных из нескольких страниц
+        market_orders = []
 
         for page in range(1, total_pages + 1):
             print(f"Загрузка страницы {page}/{total_pages}...")
@@ -89,12 +86,11 @@ def fetch_and_save_orders_to_db(batch_size=10000):
                             )
                         )
 
-                    # Сохранение данных, если накопился батч
                     if len(market_orders) >= batch_size:
                         with transaction.atomic():
                             MarketOrder.objects.bulk_create(market_orders)
                         print(f"Сохранено {len(market_orders)} записей.")
-                        market_orders = []  # Очистка для нового батча
+                        market_orders = []
 
                     break
 
@@ -108,7 +104,6 @@ def fetch_and_save_orders_to_db(batch_size=10000):
             if retries == 0:
                 print(f"Не удалось загрузить страницу {page}. Пропускаем...")
 
-        # Сохранение оставшихся данных
         if market_orders:
             with transaction.atomic():
                 MarketOrder.objects.bulk_create(market_orders)
